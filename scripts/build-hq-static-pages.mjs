@@ -82,9 +82,9 @@ for (const arg of args) {
     '<a href="/">算力海洋主站</a>',
   );
 
-  // 5. 导航统一 5 项（与门户 CMS site=hq 页面集 navOrder 派生一致，2026-09-22）
+  // 5. 导航统一 4 项（与门户 CMS site=hq 页面集 navOrder 派生一致，2026-09-22；
+  //    2026-09-28 落地页废弃去「首页」项——与 getHqNavPages 前端过滤同步）
   const NAV_ITEMS = [
-    ['/huaqiao', '首页', 'home'],
     ['/huaqiao/enterprise', '企业落地服务', 'enterprise'],
     ['/huaqiao/cloud', '云平台', 'cloud'],
     ['/huaqiao/global', '海外服务', 'global'],
@@ -136,8 +136,8 @@ for (const arg of args) {
  * 华侨数港 /huaqiao/${slug} 静态单文件页本体（设计侧导出，暂不走 CMS）。
  * 由 scripts/build-hq-static-pages.mjs 生成——勿手改；主视觉在
  * /huaqiao/${slug}-hero.jpg（web/public/huaqiao/），互链已改写站内干净路径，
- * 页头品牌槽为 /logo/logo_icon.svg 方标，导航统一 5 项（与门户 CMS 派生一致，
- * 2026-09-22），official-bar 回主站为站内路径 /。
+ * 页头品牌槽为 /logo/logo_icon.svg 方标，导航统一 4 项（与门户 CMS 派生一致，
+ * 2026-09-28 落地页废弃去「首页」），official-bar 回主站为站内路径 /。
  */
 export const ${symbol} = `;
 

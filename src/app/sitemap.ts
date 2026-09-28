@@ -20,8 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getPublishedLandingPages(),
     getPublishedNews(),
   ]);
-  // /news 常驻列表页固定收录（2026-09-23 推翻「不进 sitemap」旧决策，QA T-105）
+  // 常驻列表页固定收录：/news（2026-09-23 推翻「不进 sitemap」旧决策，QA T-105）、
+  // /insights/all（2026-09-24 洞察全量列表页，对等处理）
   return [
+    { url: absoluteUrl('/insights/all') },
     { url: absoluteUrl('/news') },
     ...buildSitemapEntries(pages, landings, news),
   ];

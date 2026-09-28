@@ -58,7 +58,8 @@ export function HqChrome({
 
       <header className="hq-header">
         <div className="wrap">
-          <a className="hq-brand" href={hqPageUrl('home')}>
+          {/* 门户废弃（.scratch/huaqiao-redirect/）：品牌直指 enterprise，不回 /huaqiao 吃一跳 301 */}
+          <a className="hq-brand" href="/huaqiao/enterprise">
             {logoUrl ? (
               <img
                 className="hq-emblem"

@@ -146,29 +146,6 @@ export function buildHomeJsonLd(config: SiteConfigMainData | null) {
 }
 
 /**
- * 子站门户 Organization + parentOrganization（对照 v0.3/shantou.html 实测）。
- * parentOrganization 桥接方式：site-config-hq 未建父组织关联字段（映射表 §2
- * 裁决 site-config 字段已覆盖全部所需、无需新增 schema），父子关系以常量
- * 桥接——父名「算力海洋」与主站根 URL 即 site-config-main 的站点身份，
- * 子站页不为此重复拉取主站配置。
- */
-export function buildHqPortalJsonLd(config: SiteConfigHqData | null) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: config?.siteName ?? '华侨数港',
-    url: absoluteUrl('/huaqiao'),
-    parentOrganization: {
-      '@type': 'Organization',
-      name: OG_SITE_NAME,
-      url: `${SITE_URL}/`,
-    },
-    ...(config?.siteTagline ? { description: config.siteTagline } : {}),
-    inLanguage: 'zh-CN',
-  };
-}
-
-/**
  * News 详情 Article 结构化数据（映射表 §2：新增能力，现网无此页）：
  * title/excerpt/cover/date 四要素 + mainEntityOfPage 自引用。
  */
@@ -236,6 +213,9 @@ export function buildSitemapEntries(
 ): { url: string; lastModified?: string }[] {
   const entries: { url: string; lastModified?: string }[] = [];
   for (const p of pages) {
+    // 落地页废弃（.scratch/huaqiao-redirect/）：/huaqiao 已 301 →
+    // /huaqiao/enterprise，hq home 条目不进 sitemap（后台条目留存，前端收口）
+    if (p.site === 'hq' && p.slug === 'home') continue;
     entries.push({
       url: absoluteUrl(pagePath(p.site, p.slug)),
       ...(p.publishedAt ? { lastModified: p.publishedAt } : {}),

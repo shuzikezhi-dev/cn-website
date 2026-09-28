@@ -311,7 +311,12 @@ export async function getHqNavPages(): Promise<HqNavItem[]> {
   const json = (await res.json()) as {
     data: { slug: string; navTitle: string | null; title: string }[];
   };
-  return (json.data ?? []).map((p) => ({ slug: p.slug, navTitle: p.navTitle || p.title }));
+  // 落地页废弃（.scratch/huaqiao-redirect/）：后台 home 条目留存（不动
+  // Strapi），导航在前端收口——home 不入子站导航（/huaqiao 已 301 →
+  // /huaqiao/enterprise，「首页」项整体下线）
+  return (json.data ?? [])
+    .filter((p) => p.slug !== 'home')
+    .map((p) => ({ slug: p.slug, navTitle: p.navTitle || p.title }));
 }
 
 /**

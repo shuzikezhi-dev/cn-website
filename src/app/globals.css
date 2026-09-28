@@ -1397,6 +1397,15 @@ ul.cards li img {
   color: #0878d2;
 }
 
+/* 洞察行卡首槽（2026-09-24 /insights/all：分类标签顶替 time 槽位，
+   字号/字重/色对齐 .insight-list article > span 网格卡形态） */
+.news-rows article > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.04em;
+}
+
 .news-rows h3 {
   font-size: var(--fs-lead);
   line-height: 1.55;

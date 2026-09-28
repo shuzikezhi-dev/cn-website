@@ -279,6 +279,55 @@ describe('content-grid kind=insightList（2.0 PRD 6.1/6.3 洞察内容列表）'
   });
 });
 
+describe('/insights/all 洞察全量列表页（2026-09-24 立项，样式参考 /news）', () => {
+  it('全量渲染行式卡（一行一条通栏，卡内纵排 标签→标题→简介→尾链）；独立承接页不高亮主导航', async () => {
+    const { getInsightEntries } = await import('@/lib/strapi');
+    vi.mocked(getInsightEntries).mockResolvedValue(seedInsights);
+    const { default: InsightListPage } = await import('@/app/insights/all/page');
+    render(await InsightListPage());
+    // 全量：getInsightEntries(100)（现量 4 条全数渲染）
+    expect(getInsightEntries).toHaveBeenCalledWith(100);
+    // 本页无 hero，区块标题升页面级 H1（对齐 /news QA T-106 先例）
+    expect(screen.getByText('洞察内容').tagName).toBe('H1');
+    // 行式列表复用 .news-rows 形态（网格 .insight-list 留给 CMS 预览区块）
+    expect(document.querySelector('.news-rows')).toBeTruthy();
+    expect(document.querySelector('.insight-list')).toBeNull();
+    const cards = document.querySelectorAll('.news-rows article');
+    expect(cards).toHaveLength(seedInsights.length);
+    // 卡内纵排：span（分类标签）→ h3 → p → a 顺序（参考 /news 的 time→h3→p→a）
+    const first = cards[0];
+    expect(first?.firstElementChild?.tagName).toBe('SPAN');
+    expect(first?.children[1]?.tagName).toBe('H3');
+    expect(first?.lastElementChild?.tagName).toBe('A');
+    // 不传 currentSlug：导航无 active 项（承接页与栏目门户 /insights 区分）
+    expect(document.querySelector('.site-nav-menu nav a.active')).toBeNull();
+    expect(document.querySelector('.site-nav-menu summary.active')).toBeNull();
+  });
+
+  it('insightList 区块 moreLabel/moreUrl 尾链（/insights 页「查看全部洞察」入口，.news-more 同构）', () => {
+    render(
+      <ContentGrid
+        data={
+          {
+            __component: 'sections.content-grid',
+            kind: 'insightList',
+            insights: seedInsights.slice(0, 1),
+            moreLabel: '查看全部洞察 →',
+            moreUrl: '/insights/all',
+          } as unknown as ContentGridData
+        }
+      />,
+    );
+    const more = document.querySelector('.news-more a');
+    expect(more?.getAttribute('href')).toBe('/insights/all');
+    // 站内路径同窗打开（lib/link-target 收口）
+    expect(more?.getAttribute('target')).toBeNull();
+    expect(more?.textContent).toBe('查看全部洞察 →');
+    // 未配 more 的区块（CMS 缺省）零尾链渲染
+    expect(document.querySelectorAll('.news-more')).toHaveLength(1);
+  });
+});
+
 describe('/news 列表页（2.0 PRD 7.1「查看全部动态」承接页）', () => {
   it('全量渲染 externalUrl 二态卡（一行一条行式）；动态独立栏目不高亮主导航（与研究洞察区分）', async () => {
     const { getLatestNews } = await import('@/lib/strapi');

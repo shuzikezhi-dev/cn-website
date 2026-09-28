@@ -42,7 +42,6 @@ import {
   absoluteUrl,
   buildMetadata,
   buildHomeJsonLd,
-  buildHqPortalJsonLd,
   buildNewsArticleJsonLd,
   buildSitemapEntries,
   pagePath,
@@ -158,11 +157,11 @@ describe('og:image 回退链（页面配图 → 站点默认图 main/hq 各一�
   });
 });
 
-describe('sitemap（12 页 + hq 前缀 + 白皮书不在 + 站内态规则 + lastmod 语义）', () => {
+describe('sitemap（11 页 + hq 前缀 + 白皮书不在 + 站内态规则 + lastmod 语义）', () => {
   const entries = buildSitemapEntries(sitemapPages, sitemapLandings, sitemapNews);
   const urls = entries.map((e) => e.url);
 
-  it('收录 12 页：main 7 页直根（home 即 /）+ hq 5 页带 /huaqiao 前缀', () => {
+  it('收录 11 页：main 7 页直根（home 即 /）+ hq 4 页带 /huaqiao 前缀（门户废弃不收 /huaqiao）', () => {
     expect(urls).toEqual(
       expect.arrayContaining([
         `${SITE_URL}/`,
@@ -172,14 +171,16 @@ describe('sitemap（12 页 + hq 前缀 + 白皮书不在 + 站内态规则 + las
         `${SITE_URL}/insights`,
         `${SITE_URL}/alliance`,
         `${SITE_URL}/government`,
-        `${SITE_URL}/huaqiao`,
         `${SITE_URL}/huaqiao/cloud`,
         `${SITE_URL}/huaqiao/enterprise`,
         `${SITE_URL}/huaqiao/global`,
         `${SITE_URL}/huaqiao/ecosystem`,
       ]),
     );
-    expect(entries).toHaveLength(13); // 12 页 + 1 条站内态 news
+    // 落地页废弃（.scratch/huaqiao-redirect/）：/huaqiao 301 → enterprise，
+    // sitemap 不列重定向目标
+    expect(urls).not.toContain(`${SITE_URL}/huaqiao`);
+    expect(entries).toHaveLength(12); // 11 页 + 1 条站内态 news
   });
 
   it('白皮书页不进 sitemap（url-plan §4：外投落地页跟随现网行为）', () => {
@@ -218,8 +219,13 @@ describe('sitemap（12 页 + hq 前缀 + 白皮书不在 + 站内态规则 + las
     vi.mocked(getPublishedNews).mockResolvedValue(sitemapNews);
     const { default: sitemap } = await import('@/app/sitemap');
     const out = await sitemap();
-    // 2026-09-23 QA T-105：/news 常驻列表页固定收录（推翻旧「不进」决策）
-    expect(out.map((e) => e.url)).toEqual([`${SITE_URL}/news`, ...urls]);
+    // 2026-09-23 QA T-105：/news 常驻列表页固定收录（推翻旧「不进」决策）；
+    // 2026-09-24：/insights/all 洞察全量列表页并列常驻
+    expect(out.map((e) => e.url)).toEqual([
+      `${SITE_URL}/insights/all`,
+      `${SITE_URL}/news`,
+      ...urls,
+    ]);
   });
 });
 
@@ -260,16 +266,6 @@ describe('JSON-LD 两段结构', () => {
     expect((website.publisher as Record<string, unknown>)['@id']).toBe(org['@id']);
   });
 
-  it('子站门户：Organization + parentOrganization 父子关系（常量桥接算力海洋）', () => {
-    const ld = buildHqPortalJsonLd(huaqiao.siteConfigHq as never) as Record<string, any>;
-    expect(ld['@type']).toBe('Organization');
-    expect(ld.name).toBe('华侨数港');
-    expect(ld.url).toBe(`${SITE_URL}/huaqiao`);
-    expect(ld.parentOrganization.name).toBe('算力海洋');
-    expect(ld.parentOrganization.url).toBe(`${SITE_URL}/`);
-    expect(ld.description).toBe('来数加工与算力服务门户');
-  });
-
   it('News 详情 Article：title/excerpt/cover/date 四要素 + 自引用', () => {
     const news = {
       id: 99,
@@ -290,7 +286,7 @@ describe('JSON-LD 两段结构', () => {
     expect(ld.mainEntityOfPage).toBe(`${SITE_URL}/news/internal-news`);
   });
 
-  it('页面渲染注入：首页 @graph / 子站门户 parentOrganization / 新闻 Article', async () => {
+  it('页面渲染注入：首页 @graph / 新闻 Article', async () => {
     const strapi = await import('@/lib/strapi');
     const readLd = () => {
       const el = document.querySelector('script[type="application/ld+json"]');
@@ -311,23 +307,7 @@ describe('JSON-LD 两段结构', () => {
       'WebSite',
     ]);
 
-    cleanup(); // 同一用例内三页连渲，逐页清场避免 JSON-LD 节点串扰
-    vi.mocked(strapi.getPage).mockResolvedValue(huaqiao.pages[0] as never);
-    vi.mocked(strapi.getSiteConfigHq).mockResolvedValue(huaqiao.siteConfigHq as never);
-    vi.mocked(strapi.getHqNavPages).mockResolvedValue([]);
-    const { default: HqHomePage } = await import('@/app/huaqiao/page');
-    // HqPageView 是 async Server Component（内部 await enrichSections），jsdom 的
-    // client 渲染不可 await 异步子树（gov-pages 先例：只测同步子组件）——此处
-    // 退一步断言页面元素树上的 script 装配（buildHqPortalJsonLd 序列化产物）
-    const tree = (await HqHomePage()) as { props: { children: unknown[] } };
-    const script = tree.props.children.find(
-      (c) => typeof c === 'object' && c !== null && (c as { type?: unknown }).type === 'script',
-    ) as { props: { dangerouslySetInnerHTML: { __html: string } } };
-    expect(JSON.parse(script.props.dangerouslySetInnerHTML.__html).parentOrganization.name).toBe(
-      '算力海洋',
-    );
-
-    cleanup();
+    cleanup(); // 同一用例内连渲，逐页清场避免 JSON-LD 节点串扰
     vi.mocked(strapi.getNews).mockResolvedValue({
       id: 99,
       documentId: 'd',

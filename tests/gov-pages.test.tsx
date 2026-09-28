@@ -22,6 +22,9 @@ const slugs = ['home', 'cloud', 'enterprise', 'global', 'ecosystem'];
 
 const config = huaqiao.siteConfigHq as unknown as SiteConfigHqData;
 const nav: HqNavItem[] = [...huaqiao.pages]
+  // 落地页废弃（.scratch/huaqiao-redirect/）：getHqNavPages 前端过滤 home
+  //（见 tests/hq-nav.test.ts），fixture 对齐生产链路的 4 项形态
+  .filter((p) => p.slug !== 'home')
   .sort((a, b) => a.navOrder - b.navOrder)
   .map((p) => ({ slug: p.slug, navTitle: p.navTitle ?? p.title }));
 
@@ -148,16 +151,22 @@ describe('全局件（site-config-hq 驱动）', () => {
     );
   });
 
-  it('nav 5 项派生自 Page 集合，当前页 active；顶条 CTA 逐页文案引全局表单', () => {
+  it('nav 4 项派生自 Page 集合（落地页废弃去「首页」），当前页 active；顶条 CTA 逐页文案引全局表单', () => {
     renderChrome('cloud');
     const links = document.querySelectorAll('.hq-menu nav a');
-    expect(links).toHaveLength(5);
-    expect(links[0].getAttribute('href')).toBe('/huaqiao');
-    expect(links[1].getAttribute('href')).toBe('/huaqiao/enterprise');
-    expect(links[2].className).toBe('active');
+    expect(links).toHaveLength(4);
+    expect(links[0].getAttribute('href')).toBe('/huaqiao/enterprise');
+    expect(links[1].className).toBe('active');
     const cta = document.querySelector('.hq-action');
     expect(cta?.textContent).toBe('申请评估');
     expect(cta?.getAttribute('href')).toBe(GLOBAL_FORM_URL);
+  });
+
+  it('品牌 logo 直指 /huaqiao/enterprise（门户废弃后不回 /huaqiao 吃 301）', () => {
+    renderChrome('cloud');
+    expect(document.querySelector('a.hq-brand')?.getAttribute('href')).toBe(
+      '/huaqiao/enterprise',
+    );
   });
 
   it('页脚 disclaimer 按页渲染 + 公司全称署名 + 链接组', () => {

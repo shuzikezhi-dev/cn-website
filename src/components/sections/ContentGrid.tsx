@@ -29,6 +29,10 @@ const INSIGHT_CATEGORY_LABELS: Record<NonNullable<InsightEntryData['category']>,
  *   数据来自 enrichSections 注入的 data.insights（Insight 集合 publishDate 倒序）。
  *   类名独立于 .insight-cards（insights-news.test 对其有数量断言）。
  *   id=insights 是本页 hero govCard「点击查看」尾链的锚点落点（同 id=news 增量钩子先例）。
+ *   newsLayout=rows（2026-09-24 运行时开关，/insights/all 全量列表页注入）容器换
+ *   .news-rows——一行一条通栏行卡（参考 /news，CMS schema 不加字段）；
+ *   moreLabel/moreUrl 尾链 .news-more 同构（kind 无关字段，/insights 页
+ *   「查看全部洞察」入口）。
  */
 export function ContentGrid({
   data,
@@ -42,8 +46,8 @@ export function ContentGrid({
     const entries = data.insights ?? [];
     return (
       <section className="section tint insight-list-section" id="insights">
-        {data.head ? <SectionHead data={data.head} /> : null}
-        <div className="insight-list">
+        {data.head ? <SectionHead data={data.head} headingAs={headLevel} /> : null}
+        <div className={data.newsLayout === 'rows' ? 'news-rows' : 'insight-list'}>
           {entries.map((item) => (
             <article key={item.id}>
               <span>{INSIGHT_CATEGORY_LABELS[item.category ?? 'whitepaper']}</span>
@@ -60,6 +64,18 @@ export function ContentGrid({
             </article>
           ))}
         </div>
+        {data.moreLabel ? (
+          <div className="news-more">
+            <a
+              href={data.moreUrl ?? '#'}
+              {...(openInNewTab(data.moreUrl)
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              {data.moreLabel}
+            </a>
+          </div>
+        ) : null}
       </section>
     );
   }

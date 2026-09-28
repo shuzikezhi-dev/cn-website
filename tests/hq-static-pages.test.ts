@@ -10,7 +10,8 @@ import { GET as GET_GLOBAL } from '@/app/huaqiao/global/route';
  * 静态段 route 遮蔽同名 [slug] CMS 页。断言：
  * 文档响应头正确、base64 主视觉已外置为 public 图、互链改写站内干净路径、
  * 回主站链接为站内 /（2026-09-22 与门户统一，绝对地址不残留）、外部表单原样；
- * 导航 5 项与门户 CMS 派生一致 + 页头品牌槽为 /logo/logo_icon.svg 方标。
+ * 导航 4 项与门户 CMS 派生一致（2026-09-28 落地页废弃去「首页」）+ 页头品牌槽
+ * 为 /logo/logo_icon.svg 方标。
  */
 const PAGES = [
   {
@@ -64,12 +65,13 @@ describe('/huaqiao 新版静态二级页（单文件内嵌，暂不走 CMS）', 
       expect(html).toContain('https://kezhishuzi.cn/share/');
     });
 
-    it(`/huaqiao/${slug}：导航 5 项与门户一致 + 品牌槽方标 logo_icon`, async () => {
+    it(`/huaqiao/${slug}：导航 4 项（落地页废弃去「首页」）+ 品牌槽方标 logo_icon`, async () => {
       const html = await GET().text();
       const nav = html.match(/<nav class="hq-nav">[\s\S]*?<\/nav>/)?.[0] ?? '';
-      // 导航统一 5 项（首页/企业落地服务/云平台/海外服务/生态合作），active 按当前页
-      expect((nav.match(/<a /g) ?? []).length).toBe(5);
-      expect(nav).toContain('href="/huaqiao"');
+      // 导航统一 4 项（企业落地服务/云平台/海外服务/生态合作），active 按当前页
+      expect((nav.match(/<a /g) ?? []).length).toBe(4);
+      expect(nav).not.toContain('href="/huaqiao"');
+      expect(nav).toContain('href="/huaqiao/enterprise"');
       expect(nav).toContain('href="/huaqiao/ecosystem"');
       expect(nav).toContain(`<a class="active" href="/huaqiao/${slug}">`);
       // 品牌槽 = 方标 logo_icon.svg（44×44，2026-09-22 起与门户页头统一）

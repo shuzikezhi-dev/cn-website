@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         },
       }
     : {}),
+  // 华侨数港落地页废弃（.scratch/huaqiao-redirect/）：/huaqiao 301 →
+  // /huaqiao/enterprise。放 next.config 而非 nginx：三种部署形态（CF OpenNext /
+  // Docker standalone / nginx 反代）唯一通吃的代码位置；statusCode 301 与 nginx
+  // legacy map 先例统一（permanent: true 输出 308）。redirects 先于文件系统
+  // 路由，遮蔽 huaqiao/page.tsx（门户页已废弃删除）。
+  async redirects() {
+    return [{ source: '/huaqiao', destination: '/huaqiao/enterprise', statusCode: 301 }];
+  },
   // 双部署路径：Docker（10 号工单）需要 standalone 自包含产物；Cloudflare OpenNext
   // 打包用 Next 默认产物、standalone 须关闭——build:cf 脚本注入 DEPLOY_TARGET=cloudflare
   output: process.env.DEPLOY_TARGET === 'cloudflare' ? undefined : 'standalone',
