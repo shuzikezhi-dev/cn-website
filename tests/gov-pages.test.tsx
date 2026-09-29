@@ -151,6 +151,28 @@ describe('全局件（site-config-hq 驱动）', () => {
     );
   });
 
+  it('顶条/页头样式与静态二级页统一（2026-09-29）：布局规则 + 900px 断点（源码扫描兜底）', () => {
+    const css = readFileSync(path.join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    // 顶条两端分布（静态页 .official-bar .wrap 同款）：文案左 / 主站链右
+    const barWrap = css.match(/\[data-skin='gov'\] \.official-bar \.wrap \{[^}]*\}/g) ?? [];
+    expect(barWrap.some((r) => r.includes('space-between'))).toBe(true);
+    // 子树行高基线 = 静态页 body line-height:1.7（主站 body 无全局行高，
+    // 继承 normal 偏紧——顶条高度矮一截，2026-09-29 作用域化补齐）
+    expect(/\[data-skin='gov'\] \{\s*line-height: 1\.7;\s*\}/.test(css)).toBe(true);
+    // 顶条/页头字体族 = 静态页 body 黑体栈（gov 子树默认衬线宋体，两边
+    // 字形完全不同，2026-09-29 全局件作用域覆盖；内容区衬线维持）
+    expect(
+      /\[data-skin='gov'\] \.official-bar,\s*\n\[data-skin='gov'\] \.hq-header \{[^}]*font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;/.test(
+        css,
+      ),
+    ).toBe(true);
+    // header 折叠断点与静态页统一为 900px：hq-menu 组规则须在 900 段、1050 段不再承载
+    const m900 = css.match(/@media \(max-width: 900px\) \{[\s\S]*?\n\}/g) ?? [];
+    expect(m900.some((r) => r.includes('.hq-menu'))).toBe(true);
+    const m1050 = css.match(/@media \(max-width: 1050px\) \{[\s\S]*?\n\}/g) ?? [];
+    expect(m1050.some((r) => r.includes('.hq-menu'))).toBe(false);
+  });
+
   it('nav 4 项派生自 Page 集合（落地页废弃去「首页」），当前页 active；顶条 CTA 逐页文案引全局表单', () => {
     renderChrome('cloud');
     const links = document.querySelectorAll('.hq-menu nav a');

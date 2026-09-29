@@ -34,6 +34,18 @@ const PAGES = [
   },
 ] as const;
 
+describe('/huaqiao/cloud：云平台入口按钮（2026-09-29 需求）', () => {
+  it('hero-meta 下有「进入华侨数港云平台」实心 CTA，新标签打开云平台', async () => {
+    const html = await GET_CLOUD().text();
+    // 按钮本体：外部平台地址 + 新开标签（noopener 防反向引用）
+    expect(html).toContain(
+      '<a class="hero-cta" href="http://203.86.109.154/" target="_blank" rel="noopener noreferrer">进入华侨数港云平台</a>',
+    );
+    // 按钮视觉在场（非裸链，对齐页头 hq-cta 渐变蓝）
+    expect(html).toContain('.hero-cta{');
+  });
+});
+
 describe('/huaqiao 新版静态二级页（单文件内嵌，暂不走 CMS）', () => {
   for (const { slug, GET, titlePrefix, others } of PAGES) {
     it(`/huaqiao/${slug}：text/html 文档 + 标题在场 + 主视觉外置 public 图`, async () => {

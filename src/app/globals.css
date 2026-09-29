@@ -1657,6 +1657,23 @@ ul.cards li img {
      （清单见 docs/design/legacy-cleanup-plan.md §1，测试防回归）
    ============================================================ */
 
+/* 子树基线与静态二级页 body 对齐（2026-09-29）：静态页 body 带
+   line-height:1.7，主站 body 无全局行高（继承 normal 偏紧）——gov 页
+   official-bar 等未显式设行高的文字整体矮一截（顶条高度差 ~5px）。
+   作用域化补齐，不动主站 body（主站排版按无全局行高调校） */
+[data-skin='gov'] {
+  line-height: 1.7;
+}
+
+/* 顶条/页头字体族与静态二级页统一（2026-09-29）：静态页 body 为黑体系
+   （PingFang SC 栈），gov 子树默认衬线宋体（05 号拆解自旧版 shantou.css）
+   ——header/顶条文字两边字形完全不同。全局件作用域换静态页同款栈；
+   内容区衬线维持（整站字体族切换属设计裁决，另行定夺） */
+[data-skin='gov'] .official-bar,
+[data-skin='gov'] .hq-header {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+
 /* ---- 全局件：政务顶条（official-bar，二级页新版：深海军蓝 + 金字 + 蓝链） ---- */
 [data-skin='gov'] .official-bar {
   background: #0b2447;
@@ -1672,6 +1689,15 @@ ul.cards li img {
 
 [data-skin='gov'] .official-bar a {
   color: #7fb4f2;
+}
+
+/* 顶条两端分布（与静态二级页统一，2026-09-29）：文案左 / 主站链右——
+   原缺失 flex 规则，CMS 页 span+a 挤左侧与静态页形态不一致 */
+[data-skin='gov'] .official-bar .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 /* ---- 全局件：页头（hq-header，二级页新版：白底卡位 + .wrap 居中容器） ---- */
@@ -2405,11 +2431,11 @@ ul.cards li img {
   }
 }
 
-@media (max-width: 1050px) {
-  [data-skin='gov'] .hq-header .wrap {
-    padding: 0 20px;
-  }
-
+/* header 折叠断点与静态二级页统一为 900px（2026-09-29，原 1050px——
+   901-1050px 窗口 CMS 页与静态页形态跳变）。内容区规则仍留在 1050 段：
+   各页内容结构不同，区块断点独立。900-640px 区间 wrap 维持默认 28px
+   （静态页同；原 20px 微调删除） */
+@media (max-width: 900px) {
   /* details/summary 零 JS 菜单：仅移动端承载开合（二级页同款按钮 + 下拉）。
      nav 下拉的定位锚是 .hq-header（全局 position:sticky，
      left:0/right:0 拉通 header 全宽）——勿给 .hq-menu 加 relative，
@@ -2458,7 +2484,9 @@ ul.cards li img {
   [data-skin='gov'] .hq-action {
     display: none;
   }
+}
 
+@media (max-width: 1050px) {
   [data-skin='gov'] .hero.home-hero {
     display: block;
   }
@@ -2487,7 +2515,8 @@ ul.cards li img {
   }
 }
 
-@media (max-width: 650px) {
+/* 小屏断点与静态页统一为 640px（2026-09-29，原 650px） */
+@media (max-width: 640px) {
   [data-skin='gov'] .hq-header .wrap,
   [data-skin='gov'] .official-bar .wrap {
     padding: 0 18px;
@@ -3355,7 +3384,13 @@ ul.cards li img {
   object-position: left center;
 }
 
-/* ---- 导航容器：桌面绝对居中常显（v0.3 .top nav），summary 仅移动端 ---- */
+/* ---- 导航容器：桌面绝对居中常显（v0.3 .top nav），summary 仅移动端 ----
+   2026-09-29 双渲染：桌面常显导航迁至独立 .site-nav-desktop（nav 元素）——
+   关闭态 details 的内容隐藏在 Chromium 131+/Safari 18.2+ 靠
+   ::details-content 恢复，Firefox 等引擎隐藏不可穿透且无该伪元素钩子，
+   原单 details 结构线上塌 0×0。details 版仅服务移动端汉堡（open 态
+   各引擎正常渲染），桌面整体隐藏 */
+.site-nav-desktop,
 .site-nav-menu {
   position: absolute;
   left: 50%;
@@ -3363,33 +3398,19 @@ ul.cards li img {
   z-index: 1;
 }
 
-/* 只藏外层 ☰（直接子 summary）——12 号引入嵌套 .site-nav-drop 后，
-   后代选择器会连内层「研究与洞察」的 summary 一起 display:none
-   （桌面整个二级宿主消失、hover 无从触发；移动端有 display:block
-   恢复规则故不受影响）。子选择器收窄命中范围 */
-.site-nav-menu > summary {
+.site-nav-menu {
   display: none;
 }
 
-/* Chromium 131+ 重构 <details> 渲染：关闭态内容改由内部 ::details-content 的
-   content-visibility: hidden 隐藏，子元素 display 穿不透——nav{display:flex}
-   失效、桌面导航不可见（09-18 联调时的旧渲染模型无此限制）。此规则显式
-   恢复可见，须独立成条：Firefox/Safari 无该伪元素会丢弃整条规则，
-   走下方子元素 display 覆盖的既有路径；移动端（≤960px）nav 本身
-   display:none + [open] 展开，不受影响 */
-.site-nav-menu::details-content {
-  content-visibility: visible;
-}
-
-.site-nav-menu nav {
+.site-nav-desktop {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 26px;
 }
 
-.site-nav-menu nav > a,
-.site-nav-menu nav > .site-nav-drop > summary {
+.site-nav-desktop > a,
+.site-nav-desktop > .site-nav-drop > summary {
   font-size: var(--fs-body);
   color: #33455e;
   padding: 29px 0 25px;
@@ -3399,19 +3420,21 @@ ul.cards li img {
   user-select: none;
 }
 
-.site-nav-menu nav > a:hover,
-.site-nav-menu nav > a.active,
-.site-nav-menu nav > .site-nav-drop > summary:hover,
-.site-nav-menu nav > .site-nav-drop > summary.active {
+.site-nav-desktop > a:hover,
+.site-nav-desktop > a.active,
+.site-nav-desktop > .site-nav-drop > summary:hover,
+.site-nav-desktop > .site-nav-drop > summary.active {
   color: var(--blue);
   border-color: var(--blue);
 }
 
 /* ---- 二级下拉（自设计：hover 展开 + [open] 键盘兜底）---- */
 /* 下拉面板住在关闭态 .site-nav-drop（details）内——hover 的 display:block
-   同样穿不透 Chromium 131+ 的 content-visibility 隐藏（同 .site-nav-menu
-   根因）。恢复可见后关闭态由 .site-nav-sub 自身 display:none 管住（同
-   移动端 [open] 展开模式），hover/[open] 时 display:block 正常弹出 */
+   同样穿不透 Chromium 131+ 的 content-visibility 隐藏（根因同主档 0×0
+   事故；主档已迁独立 .site-nav-desktop，2026-09-29）。恢复可见后关闭态由
+   .site-nav-sub 自身 display:none 管住（同移动端 [open] 展开模式），
+   hover/[open] 时 display:block 正常弹出。Firefox 等引擎无该伪元素时走
+   子元素 display 覆盖路径，二级不可弹出有父项直达兜底（09-23 定稿） */
 .site-nav-drop::details-content {
   content-visibility: visible;
 }
@@ -3611,7 +3634,13 @@ ul.cards li img {
     padding: 0 20px;
   }
 
+  /* 双渲染反转（2026-09-29）：桌面独立导航隐藏，details 汉堡恢复 */
+  .site-nav-desktop {
+    display: none;
+  }
+
   .site-nav-menu {
+    display: block;
     position: static;
     transform: none;
     margin-left: auto;

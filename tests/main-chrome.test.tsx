@@ -186,7 +186,8 @@ describe('buildMainNavTree：排序 / 分组 / 孤儿降级（验收 1/3）', ()
 describe('MainChrome 导航渲染（验收 1/2）', () => {
   it('7 项平铺一级、当前页 active；二级 fixture 渲染 details 下拉', () => {
     renderChrome({ currentSlug: 'services' });
-    const links = document.querySelectorAll('.site-nav-menu nav > a');
+    // 桌面常显导航（2026-09-29 双渲染）：一级项住在独立 .site-nav-desktop
+    const links = document.querySelectorAll('.site-nav-desktop > a');
     expect(links).toHaveLength(7);
     expect(links[0].getAttribute('href')).toBe('/');
     expect(links[3].className).toBe('active');

@@ -15,6 +15,8 @@
  *  4. 回主站绝对地址（official-bar / 页脚「关于」区）→ 站内路径 /
  *  5. 导航统一 5 项（首页/企业落地服务/云平台/海外服务/生态合作，与门户
  *     CMS site=hq 页面集 navOrder 派生一致，2026-09-22；active 按当前页）
+ *  5b. cloud 页 hero-meta 下注入云平台入口按钮（2026-09-29 需求，设计稿外
+ *     增量；幂等——已含 hero-cta 则跳过，防设计稿重导出覆盖丢失）
  *  6. 产物写 src/lib/hq-static/<slug>.ts（JSON 转义字符串，route.ts 直接 import）
  *
  * 重复导入即覆盖更新（同名 slug 幂等）；slug 必须属于 HQ_SLUGS 白名单。
@@ -100,6 +102,20 @@ for (const arg of args) {
       `\n      </nav>`,
   );
 
+  // 5b. cloud 页 hero-meta 下注入云平台入口按钮（2026-09-29 需求，设计稿外
+  //     增量）：外部平台 http://203.86.109.154/ 新标签打开；幂等——已含则跳过
+  if (slug === 'cloud' && !html.includes('hero-cta')) {
+    html = html.replace(
+      /(生产 \/ 预发布环境隔离<\/span>\s*<\/div>)/,
+      '$1\r\n      <a class="hero-cta" href="http://203.86.109.154/" target="_blank" rel="noopener noreferrer">进入华侨数港云平台</a>',
+    );
+    html = html.replace(
+      'backdrop-filter:blur(2px)}',
+      'backdrop-filter:blur(2px)}\r\n.hero-cta{display:inline-flex;align-items:center;gap:8px;margin-top:26px;padding:13px 30px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue-2));color:#fff;font-weight:700;font-size:var(--fs-body);box-shadow:0 10px 24px rgba(20,125,240,.38);white-space:nowrap;transition:.18s}\r\n.hero-cta:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(20,125,240,.5)}',
+    );
+    if (!html.includes('hero-cta')) throw new Error('cloud: hero-cta 按钮注入失败（锚点未命中）');
+  }
+
   // 6. head 注入 favicon + canonical + OG/Twitter（QA T-108，2026-09-23）：
   //    URL 根用 __SITE_URL__ 占位，route.ts 构建期 replaceAll 为 lib/site-url 的
   //    SITE_URL——域名配置与全站同源（测试站/正式站免重导出）。
@@ -137,7 +153,9 @@ for (const arg of args) {
  * 由 scripts/build-hq-static-pages.mjs 生成——勿手改；主视觉在
  * /huaqiao/${slug}-hero.jpg（web/public/huaqiao/），互链已改写站内干净路径，
  * 页头品牌槽为 /logo/logo_icon.svg 方标，导航统一 4 项（与门户 CMS 派生一致，
- * 2026-09-28 落地页废弃去「首页」），official-bar 回主站为站内路径 /。
+ * 2026-09-28 落地页废弃去「首页」），official-bar 回主站为站内路径 /。${
+    slug === 'cloud' ? '\n * hero-meta 下云平台入口按钮（2026-09-29 需求，脚本 5b 步注入设计稿外增量）。' : ''
+  }
  */
 export const ${symbol} = `;
 

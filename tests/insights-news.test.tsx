@@ -300,8 +300,8 @@ describe('/insights/all 洞察全量列表页（2026-09-24 立项，样式参考
     expect(first?.children[1]?.tagName).toBe('H3');
     expect(first?.lastElementChild?.tagName).toBe('A');
     // 不传 currentSlug：导航无 active 项（承接页与栏目门户 /insights 区分）
-    expect(document.querySelector('.site-nav-menu nav a.active')).toBeNull();
-    expect(document.querySelector('.site-nav-menu summary.active')).toBeNull();
+    expect(document.querySelector('.site-nav-desktop a.active')).toBeNull();
+    expect(document.querySelector('.site-nav-desktop summary.active')).toBeNull();
   });
 
   it('insightList 区块 moreLabel/moreUrl 尾链（/insights 页「查看全部洞察」入口，.news-more 同构）', () => {
@@ -354,8 +354,8 @@ describe('/news 列表页（2.0 PRD 7.1「查看全部动态」承接页）', ()
     const internal = screen.getByRole('link', { name: '阅读全文 →' });
     expect(internal.getAttribute('href')).toBe('/news/internal-news');
     // 不传 currentSlug：导航无 active 项（此前误挂「研究与洞察」高亮）
-    expect(document.querySelector('.site-nav-menu nav a.active')).toBeNull();
-    expect(document.querySelector('.site-nav-menu summary.active')).toBeNull();
+    expect(document.querySelector('.site-nav-desktop a.active')).toBeNull();
+    expect(document.querySelector('.site-nav-desktop summary.active')).toBeNull();
   });
 });
 

@@ -44,16 +44,11 @@ export function MainChrome({
   const isActive = (top: MainNavNode) =>
     top.slug === currentSlug || top.children.some((c) => c.slug === currentSlug);
 
-  return (
-    <>
-      <header className="site-nav">
-        <a className="site-nav-brand" href="/" aria-label={`${siteName}首页`}>
-          <img src="/logo/logo_cn_en.svg" alt={`${siteName} Token Ocean`} />
-        </a>
-        <details className="site-nav-menu">
-          <summary aria-label="菜单">☰</summary>
-          <nav>
-            {tree.map((top) =>
+  // 导航树渲染一份 JSX、两处消费（2026-09-29 双渲染）：桌面常显住独立
+  // .site-nav-desktop——关闭态 details 的内容隐藏在 Firefox 等引擎上不可
+  // 穿透且无 ::details-content 钩子，原单 details 结构线上塌 0×0；details
+  // 版保留为移动端汉堡（open 态各引擎正常渲染）
+  const navTree = tree.map((top) =>
               top.children.length > 0 ? (
                 <details className="site-nav-drop" key={top.slug}>
                   <summary className={isActive(top) ? 'active' : undefined}>
@@ -89,8 +84,18 @@ export function MainChrome({
                   {top.navTitle}
                 </a>
               ),
-            )}
-          </nav>
+            );
+
+  return (
+    <>
+      <header className="site-nav">
+        <a className="site-nav-brand" href="/" aria-label={`${siteName}首页`}>
+          <img src="/logo/logo_cn_en.svg" alt={`${siteName} Token Ocean`} />
+        </a>
+        <nav className="site-nav-desktop" aria-label="主导航">{navTree}</nav>
+        <details className="site-nav-menu">
+          <summary aria-label="菜单">☰</summary>
+          <nav>{navTree}</nav>
         </details>
         <a
           className="site-nav-cta"
